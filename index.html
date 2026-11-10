@@ -62,8 +62,8 @@
    <picture class="vid-poster"><source media="(max-width: 700px)" srcset="img/video-poster-tall.webp"><img src="img/video-poster.webp" width="1280" height="720" alt="EasyTrash"></picture>
    <video id="et-video" autoplay muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback preload="auto" aria-label="סרטון EasyTrash"></video>
    <script>(function(){var v=document.getElementById("et-video"),f=v.parentNode,t=window.matchMedia("(max-width: 700px)").matches;v.muted=true;v.defaultMuted=true;v.poster=t?"img/video-poster-tall.webp":"img/video-poster.webp";v.src=f.getAttribute(t?"data-src-tall":"data-src-wide");var p=v.play();if(p&&p.catch)p.catch(function(){});})();</script>
-   <button class="vid-play" type="button" aria-label="הפעלת הסרטון"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
    <button class="vid-sound" type="button" aria-label="הפעלת סאונד">🔊 לחצו לשמע</button>
+   <button class="vid-fs" type="button" aria-label="צפייה במסך מלא מההתחלה"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
   </div>
  </div>
 </section>

@@ -156,46 +156,49 @@ function etSend(subject, fields) {
   });
 })();
 
-// ---- video spot (Nov 10, v2): autoplays muted on load (no scroll needed); the FIRST touch / click / key / scroll anywhere turns the sound on from the start (like TrustTrade). Native controls stay so he can mute.
+// ---- video spot (Nov 10, v3): copied 1:1 from TrustTrade's homepage player. Autoplays muted in a loop; the round button in the CENTER opens it full screen from 0:00 with sound; Esc / Back / Done closes it; tapping it again restarts from 0:00. The pill turns sound on (from the start) / mutes. The first touch/click anywhere also restarts it from the start with sound.
 (function () {
   var v = document.getElementById("et-video");
   if (!v) return;
-  var f = v.parentNode, b = f.querySelector(".vid-sound");
-  var done = false, trying = false, userMuted = false;
+  var w = v.parentNode, b = w.querySelector(".vid-sound"), fsb = w.querySelector(".vid-fs");
+  var desk = !!(window.matchMedia && window.matchMedia("(min-width:701px)").matches), L = desk ? "🔊 לחצו לשמע" : "🔊 הקישו לשמע";
+  if (b) b.textContent = L;
+  v.muted = true; v.defaultMuted = true;
   function tryPlay() { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
-  v.muted = true; tryPlay();
-  v.addEventListener("playing", function () { f.classList.add("playing"); });
-  document.addEventListener("visibilitychange", function () { if (!document.hidden && v.paused && !v.ended) tryPlay(); });
-  function setOn() { f.classList.add("is-unmuted"); if (b) { b.textContent = "🔇 השתקה"; b.setAttribute("aria-label", "השתקת הסרטון"); } }
-  function setOff() { f.classList.remove("is-unmuted"); if (b) { b.textContent = "🔊 לחצו לשמע"; b.setAttribute("aria-label", "הפעלת סאונד"); } }
-  var EV = ["pointerdown", "mousedown", "touchstart", "touchend", "click", "keydown", "wheel", "scroll", "touchmove"];
-  var ACT = { pointerdown: 1, mousedown: 1, touchend: 1, click: 1, keydown: 1 };
-  function off() { EV.forEach(function (t) { (t === "scroll" ? window : document).removeEventListener(t, first, true); }); }
+  tryPlay();
+  v.addEventListener("playing", function () { w.classList.add("playing"); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && v.paused) tryPlay(); });
+  function setOn() { w.classList.add("is-unmuted"); if (b) { b.textContent = "🔇 השתקה"; b.setAttribute("aria-label", "השתקת הסרטון"); } }
+  function sound() { v.muted = false; v.volume = 1; try { v.currentTime = 0; } catch (x) {} tryPlay(); setOn(); }
+  function mute() { v.muted = true; w.classList.remove("is-unmuted"); if (b) { b.textContent = L; b.setAttribute("aria-label", "הפעלת סאונד"); } }
+  var userMuted = false, done1 = false, trying = false;
+  var EV = ["click", "touchend", "keydown", "pointerdown", "mousedown", "touchstart"];
+  function off() { EV.forEach(function (t) { document.removeEventListener(t, first, true); }); }
   function first(e) {
-    if (done || userMuted || trying) return;
-    if (e && e.target && b && b.contains && b.contains(e.target)) return;
-    if (!v.muted && !v.paused) { done = true; off(); setOn(); return; }
-    // a scroll/wheel is not a gesture the browser counts until the person has touched the page once; skip it when the browser says so
-    var ua = navigator.userActivation;
-    if (e && !ACT[e.type] && ua && !ua.isActive && !ua.hasBeenActive) return;
-    trying = true; v.muted = false; v.volume = 1;
+    if (done1 || userMuted || trying) return;
+    if ((b && b.contains(e.target)) || (fsb && fsb.contains(e.target))) return;
+    if (!v.muted) { done1 = true; off(); return; }
+    trying = true; v.muted = false; v.volume = 1; try { v.currentTime = 0; } catch (x) {}
     var p = v.play();
-    var ok = function () { setTimeout(function () { trying = false; if (!v.paused && !v.muted) { done = true; off(); setOn(); } else { v.muted = true; tryPlay(); } }, 300); };
+    var ok = function () { setTimeout(function () { trying = false; if (!v.paused && !v.muted) { done1 = true; off(); setOn(); } else { v.muted = true; tryPlay(); } }, 350); };
     var bad = function () { trying = false; v.muted = true; tryPlay(); };
     if (p && p.then) p.then(ok, bad); else ok();
   }
-  EV.forEach(function (t) { (t === "scroll" ? window : document).addEventListener(t, first, { capture: true, passive: true }); });
-  if (b) b.addEventListener("click", function (e) {
-    e.stopPropagation();
-    if (v.muted) { done = true; off(); v.muted = false; v.volume = 1; tryPlay(); setOn(); }
-    else { userMuted = true; done = true; off(); v.muted = true; setOff(); }
+  EV.forEach(function (t) { document.addEventListener(t, first, true); });
+  if (b) b.addEventListener("click", function (e) { e.stopPropagation(); if (v.muted) { done1 = true; off(); sound(); } else { userMuted = true; mute(); } });
+  // the center button: open full screen, from the start, with sound
+  if (fsb) fsb.addEventListener("click", function (e) {
+    e.stopPropagation(); done1 = true; off(); v.muted = false; v.volume = 1; try { v.currentTime = 0; } catch (x) {} tryPlay(); setOn();
+    if (v.requestFullscreen) { v.requestFullscreen().catch(function () { if (v.webkitEnterFullscreen) v.webkitEnterFullscreen(); }); }
+    else if (v.webkitEnterFullscreen) { v.webkitEnterFullscreen(); }
+    else if (v.webkitRequestFullscreen) { v.webkitRequestFullscreen(); }
   });
-  v.addEventListener("volumechange", function () { if (done) { if (v.muted) setOff(); else setOn(); } });
-  var pb = f.querySelector(".vid-play");
-  function syncP() { f.classList.toggle("is-paused", v.paused); }
-  v.addEventListener("pause", syncP); v.addEventListener("play", syncP); v.addEventListener("playing", syncP);
-  if (pb) pb.addEventListener("click", function (e) { e.stopPropagation(); if (v.muted && !userMuted) { done = true; off(); v.muted = false; v.volume = 1; setOn(); } tryPlay(); });
-  v.addEventListener("click", function () { if (v.paused) tryPlay(); });
+  // native controls (incl. the close / exit button) only while full screen
+  function fsc() { var on = (document.fullscreenElement || document.webkitFullscreenElement) === v; v.controls = on; w.classList.toggle("is-fs", on); }
+  document.addEventListener("fullscreenchange", fsc); document.addEventListener("webkitfullscreenchange", fsc);
+  v.addEventListener("webkitendfullscreen", function () { v.controls = false; tryPlay(); });
+  // one click anywhere on the video restarts it from the start with sound
+  w.addEventListener("click", function (e) { if ((b && b.contains(e.target)) || (fsb && fsb.contains(e.target))) return; if (v.muted) { done1 = true; off(); sound(); } });
 })();
 
 // ---- order form (order.html, Nov 10): emails the order to easytrashbag@gmail.com through FormSubmit ----

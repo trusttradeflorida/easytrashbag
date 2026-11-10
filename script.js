@@ -156,40 +156,47 @@ function etSend(subject, fields) {
   });
 })();
 
-// ---- video spot (Nov 10): poster first; plays muted + inline (iPhone) with native controls when it scrolls into view or when the play button is tapped.
-// Files: data-src-wide (16:9, desktop) and data-src-tall (9:16, phone). Missing file = the poster stays.
+// ---- video spot (Nov 10, v2): autoplays muted on load (no scroll needed); the FIRST touch / click / key / scroll anywhere turns the sound on from the start (like TrustTrade). Native controls stay so he can mute.
 (function () {
-  var f = document.querySelector(".vid-frame");
-  if (!f) return;
-  var mq = window.matchMedia("(max-width: 700px)");
-  var v = null, broken = false;
-  function src() { return mq.matches ? f.getAttribute("data-src-tall") : f.getAttribute("data-src-wide"); }
-  function make() {
-    if (v || broken) return v;
-    var s = src(); if (!s) { broken = true; return null; }
-    v = document.createElement("video");
-    v.muted = true; v.defaultMuted = true; v.playsInline = true; v.controls = true; v.loop = false;
-    v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("webkit-playsinline", ""); v.setAttribute("controls", "");
-    v.preload = "metadata"; v.hidden = true;
-    v.poster = mq.matches ? f.getAttribute("data-poster-tall") : f.getAttribute("data-poster-wide");
-    v.addEventListener("error", function () { broken = true; if (v) { v.remove(); v = null; } f.classList.remove("playing"); }, true);
-    v.addEventListener("playing", function () { v.hidden = false; f.classList.add("playing"); });
-    v.src = s; f.appendChild(v);
-    return v;
+  var v = document.getElementById("et-video");
+  if (!v) return;
+  var f = v.parentNode, b = f.querySelector(".vid-sound");
+  var done = false, trying = false, userMuted = false;
+  function tryPlay() { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+  v.muted = true; tryPlay();
+  v.addEventListener("playing", function () { f.classList.add("playing"); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && v.paused && !v.ended) tryPlay(); });
+  function setOn() { f.classList.add("is-unmuted"); if (b) { b.textContent = "🔇 השתקה"; b.setAttribute("aria-label", "השתקת הסרטון"); } }
+  function setOff() { f.classList.remove("is-unmuted"); if (b) { b.textContent = "🔊 לחצו לשמע"; b.setAttribute("aria-label", "הפעלת סאונד"); } }
+  var EV = ["pointerdown", "mousedown", "touchstart", "touchend", "click", "keydown", "wheel", "scroll", "touchmove"];
+  var ACT = { pointerdown: 1, mousedown: 1, touchend: 1, click: 1, keydown: 1 };
+  function off() { EV.forEach(function (t) { (t === "scroll" ? window : document).removeEventListener(t, first, true); }); }
+  function first(e) {
+    if (done || userMuted || trying) return;
+    if (e && e.target && b && b.contains && b.contains(e.target)) return;
+    if (!v.muted && !v.paused) { done = true; off(); setOn(); return; }
+    // a scroll/wheel is not a gesture the browser counts until the person has touched the page once; skip it when the browser says so
+    var ua = navigator.userActivation;
+    if (e && !ACT[e.type] && ua && !ua.isActive && !ua.hasBeenActive) return;
+    trying = true; v.muted = false; v.volume = 1;
+    try { v.currentTime = 0; } catch (x) {}
+    var p = v.play();
+    var ok = function () { setTimeout(function () { trying = false; if (!v.paused && !v.muted) { done = true; off(); setOn(); } else { v.muted = true; tryPlay(); } }, 300); };
+    var bad = function () { trying = false; v.muted = true; tryPlay(); };
+    if (p && p.then) p.then(ok, bad); else ok();
   }
-  function play() { var x = make(); if (!x) return; x.hidden = false; f.classList.add("playing"); var p = x.play(); if (p && p.catch) p.catch(function () {}); }
-  var btn = f.querySelector(".vid-play");
-  if (btn) btn.addEventListener("click", function (e) { e.stopPropagation(); play(); });
-  f.querySelector(".vid-poster") && f.querySelector(".vid-poster").addEventListener("click", function () { play(); });
-  if ("IntersectionObserver" in window) {
-    var io = new IntersectionObserver(function (es) {
-      es.forEach(function (en) {
-        if (en.isIntersecting && en.intersectionRatio >= 0.5) { if (!v) play(); }
-        else if (v && !v.paused) { v.pause(); }
-      });
-    }, { threshold: [0, 0.5] });
-    io.observe(f);
-  }
+  EV.forEach(function (t) { (t === "scroll" ? window : document).addEventListener(t, first, { capture: true, passive: true }); });
+  if (b) b.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (v.muted) { done = true; off(); v.muted = false; v.volume = 1; try { v.currentTime = 0; } catch (x) {} tryPlay(); setOn(); }
+    else { userMuted = true; done = true; off(); v.muted = true; setOff(); }
+  });
+  v.addEventListener("volumechange", function () { if (done) { if (v.muted) setOff(); else setOn(); } });
+  var pb = f.querySelector(".vid-play");
+  function syncP() { f.classList.toggle("is-paused", v.paused); }
+  v.addEventListener("pause", syncP); v.addEventListener("play", syncP); v.addEventListener("playing", syncP);
+  if (pb) pb.addEventListener("click", function (e) { e.stopPropagation(); if (v.muted && !userMuted) { done = true; off(); v.muted = false; v.volume = 1; setOn(); } tryPlay(); });
+  v.addEventListener("click", function () { if (v.paused) tryPlay(); });
 })();
 
 // ---- order form (order.html, Nov 10): emails the order to easytrashbag@gmail.com through FormSubmit ----

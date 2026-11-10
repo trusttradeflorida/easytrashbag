@@ -58,9 +58,12 @@
 <section class="vid-sec" aria-label="סרטון EasyTrash">
  <div class="wrap">
   <!-- VIDEO SPOT: put the files at assets/easytrash-hero.mp4 (16:9, desktop) and assets/easytrash-vertical.mp4 (9:16, phone), or put full video URLs in data-src-wide / data-src-tall below. Until a file exists the poster + play button show and a tap does nothing. -->
-  <div class="vid-frame" data-src-wide="assets/easytrash-hero.mp4" data-src-tall="assets/easytrash-vertical.mp4" data-poster-wide="img/video-poster.webp" data-poster-tall="img/video-poster-tall.webp">
-   <picture class="vid-poster"><source media="(max-width: 700px)" srcset="img/video-poster-tall.webp"><img src="img/video-poster.webp" width="1280" height="720" alt="EasyTrash" loading="lazy"></picture>
+  <div class="vid-frame" data-src-wide="assets/easytrash-hero.mp4" data-src-tall="assets/easytrash-vertical.mp4">
+   <picture class="vid-poster"><source media="(max-width: 700px)" srcset="img/video-poster-tall.webp"><img src="img/video-poster.webp" width="1280" height="720" alt="EasyTrash"></picture>
+   <video id="et-video" autoplay muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback preload="auto" aria-label="סרטון EasyTrash"></video>
+   <script>(function(){var v=document.getElementById("et-video"),f=v.parentNode,t=window.matchMedia("(max-width: 700px)").matches;v.muted=true;v.defaultMuted=true;v.poster=t?"img/video-poster-tall.webp":"img/video-poster.webp";v.src=f.getAttribute(t?"data-src-tall":"data-src-wide");var p=v.play();if(p&&p.catch)p.catch(function(){});})();</script>
    <button class="vid-play" type="button" aria-label="הפעלת הסרטון"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg></button>
+   <button class="vid-sound" type="button" aria-label="הפעלת סאונד">🔊 לחצו לשמע</button>
   </div>
  </div>
 </section>
@@ -144,6 +147,7 @@
   </aside>
  </div>
 </section>
+<section class="dl-sheet" aria-label="דף המוצר להורדה"><div class="wrap dl-in"><a class="dl-btn" href="sellsheet/easytrash_sellsheet_he.pdf" download="EasyTrash-דף-מוצר.pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg><span>הורידו את דף המוצר (PDF)</span></a></div></section>
 </main>
 <footer class="foot">
  <div class="wrap foot-in">

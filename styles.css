@@ -357,3 +357,41 @@ p.form-thanks{font-weight:700;color:var(--ink);padding:22px}
 @media (min-width:640px){.order-form .grid2{grid-template-columns:1fr 1fr}}
 .hp{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;border:0!important;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;opacity:0}
 .btn-head{white-space:nowrap}
+
+/* Nov 10 v2: video sits right under the hero (pulled up into the first screen) and plays on load; a sound chip like TrustTrade */
+.vid-sec{position:relative;z-index:2;padding:0 0 40px;margin-top:-56px;background:transparent}
+@media (min-width:880px){.vid-sec{padding:0 0 64px;margin-top:-104px}}
+.vid-frame{cursor:default}
+.vid-frame .vid-poster{z-index:0}
+.vid-frame video{z-index:1;background:transparent}
+.vid-frame .vid-play{display:none}
+.vid-sound{position:absolute;z-index:3;top:14px;inset-inline-start:14px;border:0;border-radius:999px;padding:9px 15px;font:700 15px/1.2 inherit;font-family:inherit;color:#fff;cursor:pointer;background:rgba(11,143,134,.92);box-shadow:0 4px 14px rgba(0,0,0,.3);animation:vidPulse 2.4s ease-in-out infinite}
+.vid-frame.is-unmuted .vid-sound{background:rgba(0,0,0,.55);animation:none;font-size:13px;padding:7px 12px}
+.vid-frame video::-webkit-media-controls{display:none!important}.vid-frame video::-webkit-media-controls-start-playback-button{display:none!important}
+.vid-sound{top:auto;bottom:14px}
+@media (min-width:900px){.hero{padding-top:64px}}
+@media (min-width:701px){.vid-sound{top:14px;bottom:auto}}
+/* Nov 10: page banners (contact, faq, how, order, wholesale): text on a clean frosted card so it reads over the photo */
+.page-head .wrap.narrow{max-width:760px;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:22px;padding:24px 22px 22px;box-shadow:0 12px 34px rgba(8,60,55,.18)}
+@media (min-width:700px){.page-head .wrap.narrow{padding:34px 40px 30px}}
+.page-head .wrap.narrow .kicker{color:#0a6f68}
+.page-head .wrap.narrow h1{color:#0f2a2c}
+.page-head .wrap.narrow .lead{color:#26403f;margin-bottom:0}
+/* Nov 10: contact page bottom buttons */
+.c-reach{padding:8px 0 56px}
+.c-reach-in{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+.c-reach a{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:12px 26px;border-radius:16px;font-weight:800;font-size:17px;text-decoration:none;box-shadow:0 8px 22px rgba(8,60,55,.16);min-width:280px}
+.c-reach a svg{width:24px;height:24px;flex:none}
+.c-reach .r-wa{background:#25D366;color:#fff}
+.c-reach .r-wa:hover{background:#1eb858}
+.c-reach .r-mail{background:#fff;color:#0f2a2c;border:2px solid #0b8f86}
+.c-reach .r-mail small{display:block;font-weight:600;font-size:14px;color:#0a6f68;direction:ltr}
+.c-reach .r-mail span{display:flex;flex-direction:column;line-height:1.25;text-align:center}
+@media (max-width:600px){.c-reach-in{flex-direction:column;align-items:stretch}.c-reach a{min-width:0;width:100%}}
+.vid-frame.is-paused .vid-play{display:grid;opacity:1;pointer-events:auto}
+/* Nov 10: sell-sheet download button (home + order page) */
+.dl-sheet{padding:28px 0 40px}
+.dl-in{display:flex;justify-content:center}
+.dl-btn{display:inline-flex;align-items:center;gap:10px;min-height:54px;padding:12px 26px;border-radius:16px;background:#fff;color:#0a6f68;border:2px solid #0b8f86;font-weight:800;font-size:17px;text-decoration:none;box-shadow:0 8px 22px rgba(8,60,55,.12)}
+.dl-btn:hover{background:#0b8f86;color:#fff}
+.dl-btn svg{width:24px;height:24px;flex:none}

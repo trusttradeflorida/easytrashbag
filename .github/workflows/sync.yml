@@ -10,20 +10,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Assemble uploaded video parts (repo-only files)
+        run: |
+          set -e
+          if [ -d parts ]; then
+            mkdir -p assets
+            for n in easytrash-hero easytrash-vertical; do
+              if ls parts/$n.mp4.part* >/dev/null 2>&1; then
+                cat $(ls parts/$n.mp4.part* | sort) > assets/$n.mp4
+              fi
+            done
+            echo "72b605de83e869b00fa76dbbcc439990e35c9fa06b6c6f42d411b176350be9a6  assets/easytrash-hero.mp4" | sha256sum -c -
+            echo "72663c3af71f0b34f612d125be9462dfdf9f10fe30f130a6a7d743f2ae7f4093  assets/easytrash-vertical.mp4" | sha256sum -c -
+            git rm -r -q parts
+          fi
       - name: Mirror live site
         run: |
           set -e
           SRC=https://easytrashbag.sites.tab.bot
           rm -rf /tmp/m && mkdir -p /tmp/m && cd /tmp/m
           wget -q -r -l 3 -p -nH -e robots=off --restrict-file-names=nocontrol "$SRC/" || true
-          for p in og.png img/video-poster-tall.webp assets/easytrash-hero.mp4 assets/easytrash-vertical.mp4; do
+          for p in og.png img/video-poster-tall.webp img/hero-boxes.webp img/hero-boxes-sm.webp order.html; do
             code=$(curl -s -o /tmp/f -w '%{http_code}' "$SRC/$p"); ct=$(file -b --mime-type /tmp/f)
-            if [ "$code" = "200" ] && [ "$ct" != "text/html" ]; then mkdir -p "$(dirname "$p")"; cp /tmp/f "$p"; fi
+            if [ "$code" = "200" ] && [ "$ct" != "text/html" -o "${p##*.}" = "html" ]; then mkdir -p "$(dirname "$p")"; cp /tmp/f "$p"; fi
           done
+          # never let the mirror touch repo-only video files
+          rm -f /tmp/m/assets/*.mp4
           # safety: only sync when the live home page looks right
           test -s index.html && grep -q "easytrash\|Easy Trash\|איזי" index.html && test -s styles.css
           cd "$GITHUB_WORKSPACE"
-          rsync -a --delete --exclude .git --exclude .github --exclude CNAME --exclude .nojekyll --exclude README.md /tmp/m/ ./
+          # no --delete: files that exist only in the repo (assets/*.mp4 etc.) are kept
+          rsync -a --exclude .git --exclude .github --exclude CNAME --exclude .nojekyll --exclude README.md --exclude 'assets/*.mp4' --exclude parts /tmp/m/ ./
           git config user.name "easytrash-sync"
           git config user.email "trusttradeflorida@users.noreply.github.com"
           git add -A

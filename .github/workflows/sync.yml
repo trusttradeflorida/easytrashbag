@@ -29,7 +29,8 @@ jobs:
           set -e
           SRC=https://easytrashbag.sites.tab.bot
           rm -rf /tmp/m && mkdir -p /tmp/m && cd /tmp/m
-          wget -q -r -l 3 -p -nH -e robots=off --restrict-file-names=nocontrol "$SRC/" || true
+          wget -q -r -l 3 -p -nH -e robots=off --restrict-file-names=nocontrol --reject-regex '\?' "$SRC/" || true
+          find . -name '*\?*' -delete
           for p in og.png img/video-poster-tall.webp img/hero-boxes.webp img/hero-boxes-sm.webp order.html; do
             code=$(curl -s -o /tmp/f -w '%{http_code}' "$SRC/$p"); ct=$(file -b --mime-type /tmp/f)
             if [ "$code" = "200" ] && [ "$ct" != "text/html" -o "${p##*.}" = "html" ]; then mkdir -p "$(dirname "$p")"; cp /tmp/f "$p"; fi

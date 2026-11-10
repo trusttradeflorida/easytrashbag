@@ -20,8 +20,8 @@ jobs:
                 cat $(ls parts/$n.mp4.part* | sort) > assets/$n.mp4
               fi
             done
-            echo "72b605de83e869b00fa76dbbcc439990e35c9fa06b6c6f42d411b176350be9a6  assets/easytrash-hero.mp4" | sha256sum -c -
-            echo "72663c3af71f0b34f612d125be9462dfdf9f10fe30f130a6a7d743f2ae7f4093  assets/easytrash-vertical.mp4" | sha256sum -c -
+            echo "5c27801bf6e2b593e08037217bd73e8fdf23b5ac508726d891ea2e8b629e13a6  assets/easytrash-hero.mp4" | sha256sum -c -
+            echo "f94aee8cdab22095b0b7eb7d165ad8db3e211cad4a32a48c597d51ea6a14f4dd  assets/easytrash-vertical.mp4" | sha256sum -c -
             git rm -r -q parts
           fi
       - name: Mirror live site

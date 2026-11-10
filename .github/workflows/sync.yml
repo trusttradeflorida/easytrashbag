@@ -1,0 +1,30 @@
+name: Sync from easytrashbag.sites.tab.bot
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mirror live site
+        run: |
+          set -e
+          SRC=https://easytrashbag.sites.tab.bot
+          rm -rf /tmp/m && mkdir -p /tmp/m && cd /tmp/m
+          wget -q -r -l 3 -p -nH -e robots=off --restrict-file-names=nocontrol "$SRC/" || true
+          for p in og.png img/video-poster-tall.webp assets/easytrash-hero.mp4 assets/easytrash-vertical.mp4; do
+            code=$(curl -s -o /tmp/f -w '%{http_code}' "$SRC/$p"); ct=$(file -b --mime-type /tmp/f)
+            if [ "$code" = "200" ] && [ "$ct" != "text/html" ]; then mkdir -p "$(dirname "$p")"; cp /tmp/f "$p"; fi
+          done
+          # safety: only sync when the live home page looks right
+          test -s index.html && grep -q "easytrash\|Easy Trash\|איזי" index.html && test -s styles.css
+          cd "$GITHUB_WORKSPACE"
+          rsync -a --delete --exclude .git --exclude .github --exclude CNAME --exclude .nojekyll --exclude README.md /tmp/m/ ./
+          git config user.name "easytrash-sync"
+          git config user.email "trusttradeflorida@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "Sync from easytrashbag.sites.tab.bot"; git push; fi

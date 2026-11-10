@@ -179,7 +179,6 @@ function etSend(subject, fields) {
     var ua = navigator.userActivation;
     if (e && !ACT[e.type] && ua && !ua.isActive && !ua.hasBeenActive) return;
     trying = true; v.muted = false; v.volume = 1;
-    try { v.currentTime = 0; } catch (x) {}
     var p = v.play();
     var ok = function () { setTimeout(function () { trying = false; if (!v.paused && !v.muted) { done = true; off(); setOn(); } else { v.muted = true; tryPlay(); } }, 300); };
     var bad = function () { trying = false; v.muted = true; tryPlay(); };
@@ -188,7 +187,7 @@ function etSend(subject, fields) {
   EV.forEach(function (t) { (t === "scroll" ? window : document).addEventListener(t, first, { capture: true, passive: true }); });
   if (b) b.addEventListener("click", function (e) {
     e.stopPropagation();
-    if (v.muted) { done = true; off(); v.muted = false; v.volume = 1; try { v.currentTime = 0; } catch (x) {} tryPlay(); setOn(); }
+    if (v.muted) { done = true; off(); v.muted = false; v.volume = 1; tryPlay(); setOn(); }
     else { userMuted = true; done = true; off(); v.muted = true; setOff(); }
   });
   v.addEventListener("volumechange", function () { if (done) { if (v.muted) setOff(); else setOn(); } });

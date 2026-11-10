@@ -395,3 +395,7 @@ p.form-thanks{font-weight:700;color:var(--ink);padding:22px}
 .dl-btn{display:inline-flex;align-items:center;gap:10px;min-height:54px;padding:12px 26px;border-radius:16px;background:#fff;color:#0a6f68;border:2px solid #0b8f86;font-weight:800;font-size:17px;text-decoration:none;box-shadow:0 8px 22px rgba(8,60,55,.12)}
 .dl-btn:hover{background:#0b8f86;color:#fff}
 .dl-btn svg{width:24px;height:24px;flex:none}
+.vid-hook{position:absolute;z-index:2;top:16px;left:50%;transform:translateX(-50%);margin:0;padding:10px 20px;border-radius:999px;background:rgba(255,255,255,.94);color:#0a6f68;font-weight:800;font-size:clamp(16px,2.2vw,24px);white-space:nowrap;box-shadow:0 6px 20px rgba(8,60,55,.22);transition:opacity .8s,transform .8s;pointer-events:none}
+.vid-frame.hook-out .vid-hook{opacity:0;transform:translateX(-50%) translateY(-8px)}
+@media (max-width:700px){.vid-hook{top:14px;font-size:17px;padding:8px 16px}}
+@media (min-width:701px){.vid-sound{top:auto;bottom:16px}}

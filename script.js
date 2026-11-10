@@ -1,4 +1,12 @@
-// EasyTrash site script. WhatsApp number: data-wa-number attributes + links (972584881948).
+// EasyTrash site script. Orders go through order.html (FormSubmit email); one WhatsApp link stays in the footer.
+// ---- order delivery (Nov 10): static site, so forms post to FormSubmit, which emails easytrashbag@gmail.com ----
+var ET_FORM_URL = "https://formsubmit.co/ajax/easytrashbag@gmail.com";
+function etSend(subject, fields) {
+  var body = { _subject: subject, _template: "table", _captcha: "false" };
+  for (var k in fields) { if (Object.prototype.hasOwnProperty.call(fields, k)) body[k] = fields[k] == null ? "" : String(fields[k]); }
+  return fetch(ET_FORM_URL, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(body) })
+    .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok || String(j.success) === "false") throw new Error(j.message || ("HTTP " + r.status)); return j; }); });
+}
 (function () {
   var y = document.querySelector("[data-year]");
   if (y) y.textContent = String(new Date().getFullYear());
@@ -20,9 +28,10 @@
     var sz = d.getAll("sizes").map(function (s) { return SIZES[s]; });
     if (sz.length) lines.push("גדלים: " + sz.join(", "));
     var n = String(d.get("notes") || "").trim(); if (n) lines.push("הערות: " + n);
-    var url = "https://wa.me/" + form.getAttribute("data-wa-number") + "?text=" + encodeURIComponent(lines.join("\n"));
-    var w = window.open(url, "_blank", "noopener");
-    if (!w) location.href = url;
+    var btn = form.querySelector("button[type=submit]"); if (btn) btn.disabled = true;
+    etSend("פנייה סיטונאית חדשה מהאתר EasyTrash", { "פנייה": lines.join("\n"), "שם": d.get("name"), "עסק": d.get("business"), "עיר": d.get("city"), "טלפון": d.get("phone"), _honey: d.get("_honey") || "" }).then(function () {
+      form.innerHTML = '<p class="form-thanks" role="status">תודה! קיבלנו את הפנייה ונחזור אליך בהקדם</p>';
+    }).catch(function () { if (btn) btn.disabled = false; err.textContent = "השליחה נכשלה, נסו שוב בעוד רגע."; err.hidden = false; });
   });
   }
 
@@ -72,24 +81,24 @@
     { id: "strong", k: ["חזק","חזקות","עמיד","דליפה","נוזל","נקרע","קורע","איכות"],
       a: "כן. אלה שקיות חזקות ועמידות בפני דליפה." },
     { id: "price", chip: "כמה זה עולה?", k: ["מחיר","עולה","עלות","שקל","₪","כסף","זול","יקר","מבצע","הנחה"],
-      a: "המחיר עוד לא מפורסם באתר, הוא לפי הזמנה. שלחו לנו וואטסאפ עם הגודל והכמות, ונחזור אליכם עם מחיר.", wa: "היי! אשמח לדעת מחיר של EasyTrash.\nגודל: ___\nכמות: ___" },
+      a: "המחיר עוד לא מפורסם באתר, הוא לפי הזמנה. מלאו את טופס ההזמנה עם הגודל והכמות, ונחזור אליכם עם מחיר.", wa: "היי! אשמח לדעת מחיר של EasyTrash.\nגודל: ___\nכמות: ___" },
     { id: "order", chip: "איך מזמינים?", k: ["להזמין","הזמנה","מזמינים","לקנות","קונים","רכישה","לרכוש"],
-      a: "בינתיים מזמינים בוואטסאפ: כתבו לנו איזה גודל וכמה אריזות, ונחזור אליכם.", wa: "היי! אני רוצה להזמין EasyTrash.\nגודל: ___\nכמות: ___" },
+      a: "מזמינים בטופס ההזמנה באתר: בוחרים גודל וכמות, ונחזור אליכם.", wa: "היי! אני רוצה להזמין EasyTrash.\nגודל: ___\nכמות: ___" },
     { id: "pay", k: ["תשלום","לשלם","אשראי","כרטיס","ביט","פייבוקס","פייפאל","מאובטח"],
-      a: "תשלום מאובטח באתר יתווסף בקרוב. בינתיים ההזמנה מתבצעת בוואטסאפ, ושם נסגור איתכם את הפרטים.", wa: "היי! אני רוצה להזמין EasyTrash, איך משלמים?" },
+      a: "תשלום מאובטח באתר יתווסף בקרוב. בינתיים מזמינים בטופס ההזמנה, ונחזור אליכם לסגור את הפרטים.", wa: "היי! אני רוצה להזמין EasyTrash, איך משלמים?" },
     { id: "b2b", chip: "לחנויות ומפיצים", k: ["חנות","חנויות","מפיץ","הפצה","סיטונא","כמויות","עסק","שיווק","מדף"],
-      a: "מעולה! אנחנו מקבלים עכשיו פניות להפצה ולהזמנות סיטונאיות. בעמוד לחנויות ומפיצים יש טופס קצר שנשלח אלינו בוואטסאפ, וגם דף מוצר להורדה.", link: ["wholesale.html", "לעמוד לחנויות ומפיצים"], wa: "היי! אני מעוניין/ת בהפצה / הזמנה סיטונאית של EasyTrash" },
+      a: "מעולה! אנחנו מקבלים עכשיו פניות להפצה ולהזמנות סיטונאיות. בעמוד לחנויות ומפיצים יש טופס קצר שנשלח אלינו, וגם דף מוצר להורדה.", link: ["wholesale.html", "לעמוד לחנויות ומפיצים"], wa: "היי! אני מעוניין/ת בהפצה / הזמנה סיטונאית של EasyTrash" },
     { id: "what", k: ["מה זה","מה המוצר","פינוי","איסוף","מפנים","שירות"],
       a: "EasyTrash הוא מוצר לבית, לא שירות פינוי: שקיות אשפה שתמיד מוכנות בתוך הפח. נרתיק שנדבק לתחתית הפח מחזיק את השקיות, וכשמוציאים שקית מלאה, הבאה כבר מחכה." },
     { id: "space", k: ["מקום","ארון","אחסון"],
       a: "השקיות הרזרביות יושבות בתחתית הפח, אז לא צריך לשמור גלילים בארון. זה מפנה מקום." },
     { id: "contact", k: ["טלפון","מספר","וואטסאפ","ווטסאפ","נציג","לדבר","קשר","מייל","אימייל"],
-      a: "הכי מהר בוואטסאפ: 058-488-1948. כתבו לנו ונחזור אליכם.", wa: "היי! יש לי שאלה על EasyTrash" },
+      a: "הכי מהר דרך טופס ההזמנה באתר. ממלאים, ונחזור אליכם.", wa: "היי! יש לי שאלה על EasyTrash" },
     { id: "hi", k: ["שלום","היי","הי","בוקר טוב","ערב טוב","אהלן"], a: "היי! 👋 במה אפשר לעזור? אפשר לבחור שאלה למטה או לכתוב לי." },
-    { id: "thanks", k: ["תודה","מעולה","סבבה","אחלה"], a: "בשמחה! אם תרצו להזמין, אנחנו בוואטסאפ.", wa: "היי! אני רוצה להזמין EasyTrash" }
+    { id: "thanks", k: ["תודה","מעולה","סבבה","אחלה"], a: "בשמחה! אם תרצו להזמין, טופס ההזמנה כאן.", wa: "היי! אני רוצה להזמין EasyTrash" }
   ];
-  var UNKNOWN = { id: "unknown", a: "את זה אני עוד לא יודע 🙏 המידע הזה עדיין לא מופיע באתר (למשל זמני משלוח או אזורי הפצה). הכי טוב לשאול אותנו ישירות בוואטסאפ, ונחזור אליכם.", wa: "היי! יש לי שאלה על EasyTrash: " };
-  var SHIP = { id: "ship", a: "על משלוחים וזמני אספקה עוד אין לי מידע באתר. כתבו לנו בוואטסאפ ונעדכן אתכם.", wa: "היי! שאלה על משלוח של EasyTrash: " };
+  var UNKNOWN = { id: "unknown", a: "את זה אני עוד לא יודע 🙏 המידע הזה עדיין לא מופיע באתר (למשל זמני משלוח או אזורי הפצה). כתבו את השאלה בהערות בטופס ההזמנה, ונחזור אליכם.", wa: "היי! יש לי שאלה על EasyTrash: " };
+  var SHIP = { id: "ship", a: "על משלוחים וזמני אספקה עוד אין לי מידע באתר. כתבו לנו בהערות בטופס ההזמנה ונעדכן אתכם.", wa: "היי! שאלה על משלוח של EasyTrash: " };
   function norm(s) {
     return String(s || "").replace(/[\u0591-\u05C7]/g, "").replace(/ך/g, "כ").replace(/ם/g, "מ").replace(/ן/g, "נ").replace(/ף/g, "פ").replace(/ץ/g, "צ").replace(/[?!.,״"׳']/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
   }
@@ -113,9 +122,9 @@
       l.style.display = "block"; l.style.marginTop = "6px"; l.style.fontWeight = "700"; m.appendChild(l);
     }
     if (item && item.wa) {
-      var w = document.createElement("a"); w.className = "msg-wa"; w.target = "_blank"; w.rel = "noopener";
-      w.href = WA + encodeURIComponent(item.wa + (item.id === "unknown" || item.id === "ship" ? (q || "") : ""));
-      w.innerHTML = WA_ICON + "<span>לוואטסאפ</span>"; m.appendChild(w);
+      var w = document.createElement("a"); w.className = "msg-wa";
+      w.href = "order.html";
+      w.innerHTML = "<span>הזמינו עכשיו</span>"; m.appendChild(w);
     }
     log.appendChild(m); log.scrollTop = log.scrollHeight;
   }
@@ -147,39 +156,65 @@
   });
 })();
 
-// ---- video spot (Nov 9): poster + play button; first tap/click anywhere starts it with sound; tapping the frame plays/pauses.
-// Files: data-src-wide (16:9, desktop) and data-src-tall (9:16, phone). Missing file = tap does nothing.
+// ---- video spot (Nov 10): poster first; plays muted + inline (iPhone) with native controls when it scrolls into view or when the play button is tapped.
+// Files: data-src-wide (16:9, desktop) and data-src-tall (9:16, phone). Missing file = the poster stays.
 (function () {
   var f = document.querySelector(".vid-frame");
   if (!f) return;
   var mq = window.matchMedia("(max-width: 700px)");
-  var v = null, broken = false, started = false;
+  var v = null, broken = false;
   function src() { return mq.matches ? f.getAttribute("data-src-tall") : f.getAttribute("data-src-wide"); }
   function make() {
     if (v || broken) return v;
     var s = src(); if (!s) { broken = true; return null; }
     v = document.createElement("video");
-    v.playsInline = true; v.setAttribute("playsinline", ""); v.preload = "auto"; v.hidden = true;
+    v.muted = true; v.defaultMuted = true; v.playsInline = true; v.controls = true; v.loop = false;
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", ""); v.setAttribute("webkit-playsinline", ""); v.setAttribute("controls", "");
+    v.preload = "metadata"; v.hidden = true;
     v.poster = mq.matches ? f.getAttribute("data-poster-tall") : f.getAttribute("data-poster-wide");
     v.addEventListener("error", function () { broken = true; if (v) { v.remove(); v = null; } f.classList.remove("playing"); }, true);
     v.addEventListener("playing", function () { v.hidden = false; f.classList.add("playing"); });
-    v.addEventListener("pause", function () { f.classList.remove("playing"); });
     v.src = s; f.appendChild(v);
     return v;
   }
-  function play() { var x = make(); if (!x) return; x.muted = false; var p = x.play(); if (p && p.catch) p.catch(function () {}); }
-  f.addEventListener("click", function (e) {
-    e.stopPropagation(); started = true;
-    var x = make(); if (!x) return;
-    if (x.paused) play(); else x.pause();
-  });
-  function first(e) {
-    if (started) return; started = true;
-    document.removeEventListener("pointerdown", first, true);
-    document.removeEventListener("keydown", first, true);
-    if (e && e.target && f.contains(e.target)) return; // the frame's own click handles it
-    play();
+  function play() { var x = make(); if (!x) return; x.hidden = false; f.classList.add("playing"); var p = x.play(); if (p && p.catch) p.catch(function () {}); }
+  var btn = f.querySelector(".vid-play");
+  if (btn) btn.addEventListener("click", function (e) { e.stopPropagation(); play(); });
+  f.querySelector(".vid-poster") && f.querySelector(".vid-poster").addEventListener("click", function () { play(); });
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (en) {
+        if (en.isIntersecting && en.intersectionRatio >= 0.5) { if (!v) play(); }
+        else if (v && !v.paused) { v.pause(); }
+      });
+    }, { threshold: [0, 0.5] });
+    io.observe(f);
   }
-  document.addEventListener("pointerdown", first, true);
-  document.addEventListener("keydown", first, true);
+})();
+
+// ---- order form (order.html, Nov 10): emails the order to easytrashbag@gmail.com through FormSubmit ----
+(function () {
+  var form = document.getElementById("order-form");
+  if (!form) return;
+  var NAMES = { small: 'קטן (35×45 ס"מ)', medium: 'בינוני (75×45 ס"מ)', large: 'גדול (90×65 ס"מ)' };
+  var pre = (location.search.match(/[?&]size=(small|medium|large)/) || [])[1];
+  if (pre) { var q0 = form.querySelector("[name=qty_" + pre + "]"); if (q0 && !Number(q0.value)) q0.value = 1; }
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var d = new FormData(form), err = form.querySelector(".form-err");
+    var items = [], total = 0;
+    ["small", "medium", "large"].forEach(function (k) { var n = parseInt(d.get("qty_" + k), 10) || 0; if (n > 0) { items.push(NAMES[k] + " × " + n); total += n; } });
+    var need = ["name", "phone", "city", "address"];
+    var missing = need.filter(function (k) { return !String(d.get(k) || "").trim(); });
+    if (missing.length || !total) { err.hidden = false; var el = missing.length ? form.querySelector("[name=" + missing[0] + "]") : form.querySelector("[name=qty_small]"); if (el) el.focus(); return; }
+    err.hidden = true;
+    var btn = form.querySelector("button[type=submit]"); btn.disabled = true;
+    etSend("הזמנה חדשה מהאתר EasyTrash", {
+      "מוצרים": items.join(" | "), "סה״כ אריזות": total,
+      "שם מלא": d.get("name"), "טלפון": d.get("phone"), "אימייל": d.get("email"), "email": d.get("email") || "",
+      "עיר": d.get("city"), "כתובת": d.get("address"), "הערות": d.get("notes"), _honey: d.get("_honey") || ""
+    }).then(function () {
+      form.hidden = true; var t = document.getElementById("order-thanks"); t.hidden = false; t.focus(); window.scrollTo(0, 0);
+    }).catch(function () { btn.disabled = false; err.textContent = "השליחה נכשלה, נסו שוב בעוד רגע."; err.hidden = false; });
+  });
 })();
